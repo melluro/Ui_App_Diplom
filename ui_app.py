@@ -949,23 +949,63 @@ hr {{
 
 .component-demo {{
   min-height: 100px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }}
+
+/* ── Стили самого компонента (можно копировать в свой проект) ── */
+.btn {{
+  font: 600 15px 'Segoe UI', sans-serif;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s, transform .05s;
+}}
+.btn-primary {{ background: #6C5CE7; color: #fff; }}
+.btn-primary:hover {{ background: #5a4bd4; }}
+.btn-primary:active {{ transform: translateY(1px); }}
+.btn-primary:disabled {{ background: #c4c0e8; cursor: not-allowed; }}
+
+.icon-btn {{
+  width: 38px; height: 38px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid #d8dce6; border-radius: 8px;
+  background: #fff; cursor: pointer; font-size: 16px;
+  transition: background .15s;
+}}
+.icon-btn:hover {{ background: #f0f2f5; }}
 """
         
         # ── JS ──
-        code = c.get("code", "// Нет кода")
+        import json
+        code = c.get("code", "").strip()
+        # Значения для подстановки в {{плейсхолдеры}} шаблона
+        preview = c.get("preview_text") or c["name"]
+        props = {
+            "label": preview, "text": preview, "title": preview,
+            "tooltip": preview, "icon": preview,
+            "action": "alert('%s clicked')" % c["name"],
+        }
         js = f"""// {c['name']} — UI Component
 // v{c['version']}
 
-(function() {{
+(function () {{
   'use strict';
 
   const demo = document.getElementById('demo');
   if (!demo) return;
 
-  // ── Код компонента ──
-  {code}
+  // HTML-шаблон компонента из библиотеки
+  const template = {json.dumps(code, ensure_ascii=False)};
 
+  // Значения пропсов для предпросмотра (props / preview_text)
+  const props = {json.dumps(props, ensure_ascii=False)};
+
+  // Подстановка {{{{...}}}} и рендер живого компонента
+  demo.innerHTML = template.replace(/\\{{\\{{(\\w+)\\}}\\}}/g, (_, k) => props[k] ?? '');
 }})();
 """
         
